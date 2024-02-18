@@ -1,3 +1,5 @@
+import { AppError } from "../appError/appError";
+import { MessageTypes } from "../lib/messageTypes";
 import { usersService } from "./users.service";
 
 export const usersController = {
@@ -7,7 +9,7 @@ export const usersController = {
       return usersService.addUser({ name: data.name, password: data.password });
     }
     if (user.password !== data.password) {
-      return { error: true, errorText: "Wrong password" };
+      throw new AppError(MessageTypes.AUTH, "Wrong password");
     }
     return { name: user.name, index: user.index };
   },

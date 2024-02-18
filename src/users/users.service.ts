@@ -1,33 +1,31 @@
 import { User, db } from "../db";
 
 export const usersService = {
-  addUser(user: User) {
-    db.users.push(user);
+  addUser(user: Omit<User, "index">) {
+    const index = db.users.lastId + 1;
+    db.users.data.push({ ...user, index });
+    db.users.lastId = index;
     return {
       name: user.name,
-      index: db.users.length - 1
+      index,
     };
   },
   getUserByName(name: string) {
-    const index = db.users.findIndex((user) => user.name === name);
-    if (index === -1) {
-      return null;
-    } else {
-      return {
-        ...db.users[index],
-        index
-      };
-    }
+    return db.users.data.find((user) => user.name === name);
+  },
+  getUserById(id: number) {
+    return db.users.data.find((user) => user.index === id);
   },
   getAllUsers() {
-    return db.users
+    return db.users.data;
   },
-  updateUser(user: Partial<User>) {
-    const index = db.users.findIndex((u) => u.name === user.name);
-    if (index === -1) {
+  updateUser(id, data: Partial<Omit<User, "index">>) {
+    const arrIndex = db.users.data.findIndex((user) => user.index === id);
+    if (arrIndex === -1) {
       return null;
     } else {
-      db.users[index] = { ...db.users[index], ...user };
+      db.users[arrIndex] = { ...db.users[arrIndex], ...data };
+      return db.users[arrIndex];
     }
-  }
-}
+  },
+};
