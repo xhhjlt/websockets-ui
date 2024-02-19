@@ -12,7 +12,7 @@ export interface Room {
   roomUsers: Pick<User, "name" | "index">[];
 }
 
-interface Ship {
+export interface Ship {
   position: {
     x: number;
     y: number;
@@ -24,17 +24,22 @@ interface Ship {
 
 export interface BattleshipGame {
   gameId: number;
-  fields: {
-    [key: number]: Ship[];
-  };
+  players: {
+    id: number;
+    ships?: Ship[];
+    field?: boolean[][];
+  }[];
+  currentPlayer: number;
 }
 
 export const db: {
   users: { data: User[]; lastId: number };
   gameRooms: { data: Room[]; lastId: number };
+  games: BattleshipGame[]
   sessions: SessionHandler[];
 } = {
   users: { data: [], lastId: 0 },
   gameRooms: { data: [], lastId: 0 },
+  games: [],
   sessions: [],
 };

@@ -2,7 +2,7 @@ import { Room, User, db } from "../db";
 
 export const roomsService = {
   getAllRooms() {
-    return db.gameRooms;
+    return db.gameRooms.data;
   },
 
   createRoom(creator: Omit<User, "password" | "wins">) {
@@ -21,7 +21,14 @@ export const roomsService = {
     if (!room) {
       return null;
     }
+    if (room.roomUsers.find((user) => user.index === player.index)) {
+      return null;
+    }
     room.roomUsers.push(player);
     return room;
+  },
+
+  deleteRoom(roomId: number) {
+    db.gameRooms.data = db.gameRooms.data.filter((room) => room.roomId !== roomId);
   }
 };

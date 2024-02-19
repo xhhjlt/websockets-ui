@@ -2,9 +2,10 @@ import { db } from "../db";
 import { SessionHandler } from "../sessionHandler";
 
 export const sessionsService = {
-  getAllSessions() {
-    return db.sessions;
+  getSessionByUserId(id: number) {
+    return db.sessions.find((session) => session.user.index === id);
   },
+
   addSession(handler: SessionHandler) {
     db.sessions.push(handler);
   },

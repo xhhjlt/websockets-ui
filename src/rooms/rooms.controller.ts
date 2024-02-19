@@ -1,7 +1,4 @@
-import { AppError } from "../appError/appError";
 import { User } from "../db";
-import { MessageTypes } from "../lib/messageTypes";
-import { usersService } from "../users/users.service";
 import { roomsService } from "./rooms.service";
 
 export const roomsController = {
