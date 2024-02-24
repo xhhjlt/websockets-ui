@@ -31,10 +31,13 @@ export const gamesController = {
     if (results[0].status === AttackResults.MISS) {
       gamesService.changeTurn(gameId);
     }
-    if (results[0].status === AttackResults.WIN) {
+    if (results.some((result) => result.status === AttackResults.WIN)) {
       usersService.addWin(playerId);
-      gamesService.deleteGame(gameId);
     }
     return {results, game};
+  },
+
+  deleteGame(gameId: number) {
+    gamesService.deleteGame(gameId);
   },
 };

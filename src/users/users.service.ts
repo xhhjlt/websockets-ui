@@ -20,12 +20,11 @@ export const usersService = {
     return db.users.data;
   },
   addWin(id) {
-    const arrIndex = db.users.data.findIndex((user) => user.index === id);
-    if (arrIndex === -1) {
+    const userData = db.users.data.find((user) => user.index === id);
+    if (!userData) {
       return null;
     } else {
-      db.users[arrIndex] = { ...db.users[arrIndex], wins: (db.users[arrIndex]?.wins || 0) + 1 };
-      return db.users[arrIndex];
+      userData.wins = userData.wins ? userData.wins + 1 : 1;
     }
   },
 };

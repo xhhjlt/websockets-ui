@@ -116,6 +116,8 @@ export class SessionHandler {
               sessionsController.sendToUser(player.id, MessageTypes.FINISH, {
                 winPlayer: data.indexPlayer,
               });
+              gamesController.deleteGame(data.gameId);
+              updateWinners();
             }
           });
         });

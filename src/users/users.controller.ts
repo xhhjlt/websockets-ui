@@ -14,6 +14,7 @@ export const usersController = {
     return { name: user.name, index: user.index };
   },
   getWinners() {
+    console.log(usersService.getAllUsers());
     return usersService.getAllUsers().filter((user) => !!user.wins).sort((a, b) => (b.wins || 0) - (a.wins || 0));
   }
 }

@@ -101,18 +101,18 @@ export const gamesService = {
       }
     );
     if (!ship) {
-      return [{status : AttackResults.MISS, x, y}];
+      return [{status : AttackResults.WIN, x, y}];
     }
     const isAlive = ship.points.filter((p) => !p.hit).length;
     if (isAlive) {
       return [{status : AttackResults.SHOT, x, y}];
     } else {
-      if (enemy.ships?.length === 1) {
-        return [{status : AttackResults.WIN, x, y}];
-      } else {
-        enemy.ships = enemy.ships?.filter((playerShip) => playerShip !== ship);
-        return [{status : AttackResults.KILLED, x, y}];
+      const results = [{status : AttackResults.KILLED, x, y}];
+      enemy.ships = enemy.ships?.filter((playerShip) => playerShip !== ship);
+      if (!enemy.ships?.length) {
+        results.push({status : AttackResults.WIN, x, y});
       }
+      return results;
     }
   },
 
