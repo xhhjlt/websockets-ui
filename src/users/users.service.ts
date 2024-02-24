@@ -19,12 +19,12 @@ export const usersService = {
   getAllUsers() {
     return db.users.data;
   },
-  updateUser(id, data: Partial<Omit<User, "index">>) {
+  addWin(id) {
     const arrIndex = db.users.data.findIndex((user) => user.index === id);
     if (arrIndex === -1) {
       return null;
     } else {
-      db.users[arrIndex] = { ...db.users[arrIndex], ...data };
+      db.users[arrIndex] = { ...db.users[arrIndex], wins: (db.users[arrIndex]?.wins || 0) + 1 };
       return db.users[arrIndex];
     }
   },

@@ -20,6 +20,7 @@ export interface Ship {
   direction: boolean;
   length: number;
   type: "small" | "medium" | "large" | "huge";
+  points: { x: number; y: number, hit?: boolean }[]; 
 }
 
 export interface BattleshipGame {
@@ -27,7 +28,7 @@ export interface BattleshipGame {
   players: {
     id: number;
     ships?: Ship[];
-    field?: boolean[][];
+    field: boolean[][];
   }[];
   currentPlayer: number;
 }

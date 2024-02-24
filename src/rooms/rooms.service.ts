@@ -1,4 +1,6 @@
+import { AppError } from "../appError/appError";
 import { Room, User, db } from "../db";
+import { MessageTypes } from "../lib/messageTypes";
 
 export const roomsService = {
   getAllRooms() {
@@ -17,12 +19,12 @@ export const roomsService = {
   },
 
   addPlayerToRoom(roomId: number, player: Omit<User, "password" | "wins">) {
-    const room = db.gameRooms.data.find((room) => room.roomId === roomId);
+    const room = db.gameRooms.data.find((room) => room?.roomId === roomId);
     if (!room) {
-      return null;
+      throw new AppError(MessageTypes.ADD_USER_TO_ROOM, "Room not found");
     }
     if (room.roomUsers.find((user) => user.index === player.index)) {
-      return null;
+      throw new AppError(MessageTypes.ADD_USER_TO_ROOM, "User already in room");
     }
     room.roomUsers.push(player);
     return room;

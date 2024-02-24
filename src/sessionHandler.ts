@@ -6,6 +6,7 @@ import { roomsController } from "./rooms/rooms.controller";
 import { sessionsService } from "./sessions/sessions.service";
 import { gamesController } from "./games/games.controller";
 import { sessionsController } from "./sessions/sessions.controller";
+import { AttackResults } from "./lib/attackResults";
 
 const hour = 1000 * 60 * 60;
 
@@ -30,13 +31,14 @@ export class SessionHandler {
   send(type: MessageTypes, raw: any) {
     const data = JSON.stringify(raw);
     const resp = JSON.stringify({ type, id: 0, data });
+    console.log("-->", type, raw);
     this.ws.send(resp);
   }
 
   sendAll(type: MessageTypes, raw: any) {
     const data = JSON.stringify(raw);
     const resp = JSON.stringify({ type, id: 0, data });
-    console.log(resp);
+    console.log("-->", type, raw);
     this.server.clients.forEach((client) => client.send(resp));
   }
 
@@ -45,9 +47,11 @@ export class SessionHandler {
       const response = JSON.parse(raw);
       const { type, data: rawData } = response;
       const data = rawData ? JSON.parse(rawData) : {};
+      console.log("<--", type, data);
       const updateWinners = () =>
         this.sendAll(MessageTypes.UPDATE_WINNERS, usersController.getWinners());
-      const updateRooms = () => this.sendAll(MessageTypes.UPDATE_ROOM, roomsController.getRooms());
+      const updateRooms = () =>
+        this.sendAll(MessageTypes.UPDATE_ROOM, roomsController.getRooms());
       if (type === MessageTypes.AUTH) {
         const respData = usersController.login(data);
         this.startSession({ name: respData.name, index: respData.index });
@@ -62,25 +66,59 @@ export class SessionHandler {
         const room = roomsController.addUserToRoom(data.indexRoom, this.user);
         const game = gamesController.createGame(room);
         game.players.forEach((player) => {
-            sessionsController.sendToUser(player.id, MessageTypes.CREATE_GAME, { idGame: game.gameId, idPlayer: player.id });
-        })
+          sessionsController.sendToUser(player.id, MessageTypes.CREATE_GAME, {
+            idGame: game.gameId,
+            idPlayer: player.id,
+          });
+        });
         updateRooms();
       } else if (type === MessageTypes.ADD_SHIPS) {
-        const game = gamesController.addShips(data.gameId, data.indexPlayer, data.ships);
-        if (game && game?.players?.every((player) => player.ships)) {
-          game.players.forEach((player) => {
-            sessionsController.sendToUser(player.id, MessageTypes.START_GAME, { ships: game.players.find((p) => p.id === player.id)?.ships, currentPlayerIndex: player.id });
-            sessionsController.sendToUser(player.id, MessageTypes.TURN, { turn: game.currentPlayer });
-  
-          })
-        }
-      } else if (type === MessageTypes.ATTACK) {
-        const game = gamesController.attack(data.gameId, data.indexPlayer, data.x, data.y);
+        const game = gamesController.addShips(
+          data.gameId,
+          data.indexPlayer,
+          data.ships
+        );
         if (game) {
           game.players.forEach((player) => {
-            sessionsController.sendToUser(player.id, MessageTypes.TURN, { turn: game.currentPlayer });
-          })
+            sessionsController.sendToUser(player.id, MessageTypes.START_GAME, {
+              ships: game.players.find((p) => p.id === player.id)?.ships,
+              currentPlayerIndex: player.id,
+            });
+            sessionsController.sendToUser(player.id, MessageTypes.TURN, {
+              currentPlayer: game.currentPlayer,
+            });
+          });
         }
+      } else if (
+        type === MessageTypes.ATTACK
+        //  || type === MessageTypes.RANDOM_ATTACK
+      ) {
+        const { results, game } = gamesController.attack(
+          data.gameId,
+          data.indexPlayer,
+          data.x,
+          data.y
+        );
+        results.forEach((result, index, arr) => {
+          game?.players.forEach((player) => {
+            if (result.status !== AttackResults.WIN) {
+              sessionsController.sendToUser(player.id, MessageTypes.ATTACK, {
+                position: { x: result.x, y: result.y },
+                currentPlayer: data.indexPlayer,
+                status: result.status,
+              });
+              if (index === arr.length - 1) {
+                sessionsController.sendToUser(player.id, MessageTypes.TURN, {
+                  currentPlayer: game.currentPlayer,
+                });
+              }
+            } else {
+              sessionsController.sendToUser(player.id, MessageTypes.FINISH, {
+                winPlayer: data.indexPlayer,
+              });
+            }
+          });
+        });
       }
     } catch (error) {
       if (error instanceof AppError) {
