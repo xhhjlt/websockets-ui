@@ -31,14 +31,14 @@ export class SessionHandler {
   send(type: MessageTypes, raw: any) {
     const data = JSON.stringify(raw);
     const resp = JSON.stringify({ type, id: 0, data });
-    console.log("-->", type, raw);
+    console.log("-->", type);
     this.ws.send(resp);
   }
 
   sendAll(type: MessageTypes, raw: any) {
     const data = JSON.stringify(raw);
     const resp = JSON.stringify({ type, id: 0, data });
-    console.log("-->", type, raw);
+    console.log("-->", type);
     this.server.clients.forEach((client) => client.send(resp));
   }
 
@@ -47,7 +47,7 @@ export class SessionHandler {
       const response = JSON.parse(raw);
       const { type, data: rawData } = response;
       const data = rawData ? JSON.parse(rawData) : {};
-      console.log("<--", type, data);
+      console.log("<--", type);
       const updateWinners = () =>
         this.sendAll(MessageTypes.UPDATE_WINNERS, usersController.getWinners());
       const updateRooms = () =>
@@ -90,8 +90,8 @@ export class SessionHandler {
           });
         }
       } else if (
-        type === MessageTypes.ATTACK
-        //  || type === MessageTypes.RANDOM_ATTACK
+        type === MessageTypes.ATTACK ||
+        type === MessageTypes.RANDOM_ATTACK
       ) {
         const { results, game } = gamesController.attack(
           data.gameId,

@@ -10,12 +10,14 @@ export const gamesService = {
       players: [
         {
           id: room.roomUsers[0].index,
-          field: Array(10).fill(null)
+          field: Array(10)
+            .fill(null)
             .map(() => Array(10).fill(false)),
         },
         {
           id: room.roomUsers[1].index,
-          field: Array(10).fill(null)
+          field: Array(10)
+            .fill(null)
             .map(() => Array(10).fill(false)),
         },
       ],
@@ -81,36 +83,50 @@ export const gamesService = {
     return game;
   },
 
-  attack: (gameId: number, playerId: number, x?: number, y?: number) => {
+  attack: (gameId: number, playerId: number, x: number, y: number) => {
     const game = db.games.find((game) => game.gameId === gameId);
     const enemy = game?.players.find((player) => player.id !== playerId);
     if (!enemy || !game) {
       throw new AppError(MessageTypes.ATTACK, "Enemy not found");
     }
-    if (!!enemy.field[x][y]) {
+    const coords = { x, y };
+    if (coords.x === undefined || coords.y === undefined) {
+      do {
+        coords.x = Math.floor(Math.random() * 10);
+        coords.y = Math.floor(Math.random() * 10);
+      } while (!!enemy.field[coords.x][coords.y]);
+    }
+    if (!!enemy.field[coords.x][coords.y]) {
       throw new AppError(MessageTypes.ATTACK, "Already attacked");
     }
-    enemy.field[x][y] = true;
-    const ship = enemy?.ships?.find((ship) =>
-      {
-        const point = ship.points.find((p) => p.x === x && p.y === y)
-        if (point) {
-          point.hit = true;
-        }
-        return !!point
+    enemy.field[coords.x][coords.y] = true;
+    const ship = enemy?.ships?.find((ship) => {
+      const point = ship.points.find(
+        (p) => p.x === coords.x && p.y === coords.y
+      );
+      if (point) {
+        point.hit = true;
       }
-    );
+      return !!point;
+    });
     if (!ship) {
-      return [{status : AttackResults.WIN, x, y}];
+      return [{ status: AttackResults.MISS, x: coords.x, y: coords.y }];
     }
     const isAlive = ship.points.filter((p) => !p.hit).length;
     if (isAlive) {
-      return [{status : AttackResults.SHOT, x, y}];
+      return [{ status: AttackResults.SHOT, x: coords.x, y: coords.y }];
     } else {
-      const results = [{status : AttackResults.KILLED, x, y}];
+      const results = ship.points.flatMap((point) => {
+        const offsets = [-1, 0, 1];
+        const surroundingPoints = offsets.flatMap(dx =>
+          offsets.map(dy => ({ x: point.x + dx, y: point.y + dy }))
+        ).filter(point => point.x >= 0 && point.x < 10 && point.y >= 0 && point.y < 10 && !enemy.field[point.x][point.y]);
+        surroundingPoints.forEach(point => enemy.field[point.x][point.y] = true);
+        return [{ status: AttackResults.KILLED, x: point.x, y: point.y }, ...surroundingPoints.map(point => ({ status: AttackResults.MISS, x: point.x, y: point.y }))];
+      });
       enemy.ships = enemy.ships?.filter((playerShip) => playerShip !== ship);
       if (!enemy.ships?.length) {
-        results.push({status : AttackResults.WIN, x, y});
+        results.push({ status: AttackResults.WIN, x: coords.x, y: coords.y });
       }
       return results;
     }
