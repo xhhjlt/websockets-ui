@@ -83,7 +83,7 @@ export const gamesService = {
     return game;
   },
 
-  attack: (gameId: number, playerId: number, x: number, y: number) => {
+  attack: (gameId: number, playerId: number, x?: number, y?: number) => {
     const game = db.games.find((game) => game.gameId === gameId);
     const enemy = game?.players.find((player) => player.id !== playerId);
     if (!enemy || !game) {
